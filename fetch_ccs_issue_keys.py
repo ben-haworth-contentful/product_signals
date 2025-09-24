@@ -27,7 +27,7 @@ def fetch_ccs_issue_keys(jira_email: str, jira_api_token: str, base_url: str = "
     all_keys = []
     iteration = 1
 
-    while not is_last and iteration < 100:
+    while not is_last and iteration < 3:
            
         if page_token:
             payload = payload_template
