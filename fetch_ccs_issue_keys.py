@@ -2,7 +2,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 import json
 
-def fetch_ccs_issue_keys(jira_email: str, jira_api_token: str, base_url: str = "https://contentful.atlassian.net", max_results: int = 100):
+def fetch_ccs_issue_keys(jira_email: str, jira_api_token: str, base_url: str = "https://contentful.atlassian.net", max_results: int = 1):
     """
     Fetch all issue keys in project CCS with status New Idea, Clarifying with Field, or On Hold.
 

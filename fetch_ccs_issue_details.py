@@ -3,8 +3,32 @@ from requests.auth import HTTPBasicAuth
 import json
 from datetime import datetime
 import os
+import boto3
+from botocore.exceptions import NoCredentialsError
 
-def fetch_ccs_issue_details(jira_email: str, jira_api_token: str, keys: list[str], base_url: str = "https://contentful.atlassian.net"):
+def upload_directory_to_s3(directory_path: str, bucket_name: str, aws_access_key_id: str, aws_secret_access_key: str, region_name: str = "eu-central-1"):
+    """
+    Uploads the specified directory to an S3 bucket.
+    """
+    s3_client = boto3.client(
+        's3',
+        aws_access_key_id=aws_access_key_id,
+        aws_secret_access_key=aws_secret_access_key
+    )
+    
+    for root, dirs, files in os.walk(directory_path):
+        for file in files:
+            file_path = os.path.join(root, file)
+            s3_key = os.path.relpath(file_path, os.path.dirname(directory_path))
+            try:
+                s3_client.upload_file(file_path, bucket_name, f"{os.path.basename(directory_path)}/{s3_key}")
+                print(f"Uploaded {file_path} to s3://{bucket_name}/{os.path.basename(directory_path)}/{s3_key}")
+            except FileNotFoundError:
+                print(f"The file {file_path} was not found.")
+            except NoCredentialsError:
+                print("Credentials not available.")
+
+def fetch_ccs_issue_details(jira_email: str, jira_api_token: str, keys: list[str], aws_access_key_id: str, aws_secret_access_key: str, base_url: str = "https://contentful.atlassian.net"):
     """
     Fetch all issue keys in project CCS with status New Idea, Clarifying with Field, or On Hold.
 
@@ -42,3 +66,6 @@ def fetch_ccs_issue_details(jira_email: str, jira_api_token: str, keys: list[str
         file_path = f"{directory_path}/{key}.json"
         with open(file_path, 'w') as json_file:
             json.dump(data, json_file, indent=2)
+
+    # Upload the directory to S3
+    upload_directory_to_s3(directory_path, 'product-signals', aws_access_key_id, aws_secret_access_key)
